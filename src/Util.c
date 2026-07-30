@@ -209,7 +209,7 @@ createBack(SDL_Surface ** back_surface)
   SDL_Rect pos;
   SDL_Surface *img = images[img_back]->image;
 
-  if(!(*back_surface = SDL_CreateRGBSurface(SDL_HWSURFACE,
+  if(!(*back_surface = SDL_CreateRGBSurface(0,
                                             screen->w + img->w,
                                             screen->h + img->h,
                                             screen->format->BitsPerPixel,
@@ -330,7 +330,7 @@ processShimmer()
     }
     fx_y -= 5;
   }
-  SDL_UpdateRects(fx_surface, 1, &fx_rect);
+  /* effects drawn to virtual screen; presentScreen() will display them */
   //SDL_Flip(surface);
   //SDL_Delay(10);
 }

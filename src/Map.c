@@ -1086,7 +1086,7 @@ finishDrawMap()
     map.status_time--;
     drawString(screen, screen->w / 2, 5, map.status);
   }
-  SDL_Flip(screen);
+  presentScreen();
 
   if(map.afterScreenFlipped)
     map.afterScreenFlipped();
@@ -1215,8 +1215,6 @@ int
 initMap(char *name, int w, int h)
 {
   int i;
-  int hw_surface;
-
   int x, y;
   SDL_Rect pos;
 
@@ -1250,7 +1248,7 @@ initMap(char *name, int w, int h)
       fflush(stderr);
       exit(0);
     }
-    if(!(map.level[i] = SDL_CreateRGBSurface(SDL_HWSURFACE,
+    if(!(map.level[i] = SDL_CreateRGBSurface(0,
                                              screen->w + EXTRA_X * TILE_W,
                                              screen->h + EXTRA_Y * TILE_H,
                                              screen->format->BitsPerPixel,
@@ -1259,24 +1257,15 @@ initMap(char *name, int w, int h)
       fflush(stderr);
       return 0;
     }
-    hw_surface = (map.level[i]->flags & SDL_HWSURFACE ? 1 : 0);
-    fprintf(stderr, "level[%d] is HW surface? %d\n", i, hw_surface);
-    if(screen->flags & SDL_HWSURFACE & !hw_surface) {
-      fprintf(stderr,
-              "*** Can't create surface in video memory. Since the screen is there, this surface must too.\n");
-      fprintf(stderr, "*** This may make the game very slow!");
-      fflush(stderr);
-      //    return 0;
-    }
   }
 
   // set the pixel blending for some levels
   if(mainstruct.drawBackground) {
-    SDL_SetColorKey(map.level[LEVEL_BACK], SDL_SRCCOLORKEY,
+    SDL_SetColorKey(map.level[LEVEL_BACK], SDL_TRUE,
                     SDL_MapRGBA(map.level[LEVEL_BACK]->format, 0x00, 0x00,
                                 0x00, 0x00));
   }
-  SDL_SetColorKey(map.level[LEVEL_MAIN], SDL_SRCCOLORKEY,
+  SDL_SetColorKey(map.level[LEVEL_MAIN], SDL_TRUE,
                   SDL_MapRGBA(map.level[LEVEL_MAIN]->format, 0x00, 0x00, 0x00,
                               0x00));
   //  if(!mainstruct.alphaBlend) {
@@ -1284,7 +1273,7 @@ initMap(char *name, int w, int h)
   //  }
 
   // init the transfer area
-  if(!(map.transfer = SDL_CreateRGBSurface(SDL_HWSURFACE,
+  if(!(map.transfer = SDL_CreateRGBSurface(0,
                                            screen->w + EXTRA_X * TILE_W,
                                            screen->h + EXTRA_Y * TILE_H,
                                            screen->format->BitsPerPixel,
@@ -1293,16 +1282,9 @@ initMap(char *name, int w, int h)
     fflush(stderr);
     return 0;
   }
-  fprintf(stderr, "transfer area is HW surface? %d\n", hw_surface);
-  if(screen->flags & SDL_HWSURFACE & !hw_surface) {
-    fprintf(stderr,
-            "Can't create surface in video memory. Since the screen is there, this surface must too.\n");
-    fflush(stderr);
-    return 0;
-  }
   // init the background
   map.background_image = images[img_back]->image;
-  if(!(map.background = SDL_CreateRGBSurface(SDL_HWSURFACE,
+  if(!(map.background = SDL_CreateRGBSurface(0,
                                              screen->w +
                                              map.background_image->w,
                                              screen->h +
@@ -1313,15 +1295,6 @@ initMap(char *name, int w, int h)
             SDL_GetError());
     fflush(stderr);
     return 0;
-  }
-  hw_surface = (map.background->flags & SDL_HWSURFACE ? 1 : 0);
-  fprintf(stderr, "background is HW surface? %d\n", hw_surface);
-  if(screen->flags & SDL_HWSURFACE & !hw_surface) {
-    fprintf(stderr,
-            "*** Can't create background in video memory. Since the screen is there, this surface must too.\n");
-    fprintf(stderr, "*** This may make the game very slow!");
-    fflush(stderr);
-    //    return 0;
   }
 
   for(y = 0; y < map.background->h; y += map.background_image->h) {

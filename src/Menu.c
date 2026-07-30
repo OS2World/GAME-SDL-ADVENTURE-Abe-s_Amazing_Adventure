@@ -138,7 +138,9 @@ saveSettings()
   }
   mainstruct.full_screen = !(entries[FULLSCREEN_ENABLED].selected);
   if(old_screen != mainstruct.full_screen) {
-    SDL_WM_ToggleFullScreen(screen);
+    Uint32 wflags = SDL_GetWindowFlags(window);
+    SDL_SetWindowFullscreen(window,
+      (wflags & SDL_WINDOW_FULLSCREEN_DESKTOP) ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
   }
   game.difficoulty = entries[GAME_DIFFICOULTY].selected;
   mainstruct.drawBackground = !(entries[DRAW_BACKGROUND].selected);
@@ -195,7 +197,7 @@ paintScreen()
   SDL_BlitSurface(images[img_bullet[m_face / m_face_mod]]->image, NULL,
                   screen, &pos);
 
-  SDL_Flip(screen);
+  presentScreen();
 }
 
 void
@@ -255,7 +257,7 @@ paintAboutScreen()
     m_face = 0;
 
   drawString(screen, screen->w / 2 - 100, screen->h - 30, "press any key");
-  SDL_Flip(screen);
+  presentScreen();
 }
 
 void

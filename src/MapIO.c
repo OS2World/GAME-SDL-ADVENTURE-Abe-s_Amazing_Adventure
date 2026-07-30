@@ -110,6 +110,20 @@ loadMapPath(char *path, int draw_map)
   decompressMap(read_buff);
   free(read_buff);
 
+  // Clamp any tile index that is out of bounds or has no loaded image to EMPTY_MAP.
+  // The map may reference indices beyond the loaded image set; leave those as empty.
+  {
+    int sl, si;
+    for(sl = 0; sl < LEVEL_COUNT; sl++) {
+      for(si = 0; si < map.w * map.h; si++) {
+        Uint16 idx = map.image_index[sl][si];
+        if(idx != EMPTY_MAP &&
+           (idx >= 256 || images[idx] == NULL || images[idx]->image == NULL))
+          map.image_index[sl][si] = EMPTY_MAP;
+      }
+    }
+  }
+
   // clean map... delete this...
   fprintf(stderr, "*** Debug code: removing stuff in LEVEL_FORE.\n");
   for(y = 0; y < map.h; y++) {
@@ -218,7 +232,10 @@ compressMap(size_t * new_size)
         t++;
         if(n != EMPTY_MAP) {
           // skip ahead
-          x += images[n]->image->w / TILE_W;
+          if(n < 256 && images[n] != NULL && images[n]->image != NULL)
+            x += images[n]->image->w / TILE_W;
+          else
+            x++;
         } else {
           x++;
         }
@@ -249,8 +266,12 @@ decompressMap(Uint16 * p)
         map.image_index[level][i] = n;
         x++;
         if(n != EMPTY_MAP) {
-          for(r = 1; r < images[n]->image->w / TILE_W && x < map.w; r++, x++) {
-            map.image_index[level][i + r] = EMPTY_MAP;
+          if(n >= 256 || images[n] == NULL || images[n]->image == NULL) {
+            /* skip tiles that reference beyond the images array or NULL images */
+          } else {
+            for(r = 1; r < images[n]->image->w / TILE_W && x < map.w; r++, x++) {
+              map.image_index[level][i + r] = EMPTY_MAP;
+            }
           }
         }
       }

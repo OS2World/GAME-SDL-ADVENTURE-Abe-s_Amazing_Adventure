@@ -46,7 +46,7 @@ paintIcons()
   SDL_FillRect(screen, &pos,
                SDL_MapRGBA(screen->format, 0xa0, 0xa0, 0x00, 0x00));
 
-  SDL_Flip(screen);
+  presentScreen();
 }
 
 void

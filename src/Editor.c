@@ -18,7 +18,7 @@ SDL_Surface *map_screen;
 void
 makeMap()
 {
-  if(!(map_screen = SDL_CreateRGBSurface(SDL_SWSURFACE,
+  if(!(map_screen = SDL_CreateRGBSurface(0,
                                          (SAVE_WIDTH - SAVE_X) * TILE_W,
                                          SAVE_HEIGHT * TILE_H,
                                          screen->format->BitsPerPixel,
@@ -43,7 +43,6 @@ beforeDrawToScreen()
   if(make_map) {
     if(cursor.pos_y >= SAVE_HEIGHT) {
       make_map = 0;
-      SDL_Flip(map_screen);
       fprintf(stderr, "saving map.bmp\n");
       SDL_SaveBMP(map_screen, "map.bmp");
       fprintf(stderr, "done saving map.bmp\n");
@@ -54,7 +53,6 @@ beforeDrawToScreen()
       pos.w = screen->w;
       pos.h = screen->h;
       SDL_BlitSurface(screen, NULL, map_screen, &pos);
-      SDL_Flip(map_screen);
 
       cursor.dir = DIR_UPDATE;
       map.redraw = 1;
@@ -468,7 +466,7 @@ void
 initEditor()
 {
   //  map = NULL;
-  if(!(edit_panel.image = SDL_CreateRGBSurface(SDL_HWSURFACE,
+  if(!(edit_panel.image = SDL_CreateRGBSurface(0,
                                                screen->w, EDIT_PANEL_HEIGHT,
                                                screen->format->BitsPerPixel,
                                                0, 0, 0, 0))) {

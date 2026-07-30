@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <stdio.h>
 #include "Directories.h"
 
 // Returns a char* to "/home/username/.abe/" or ".\"
@@ -7,7 +9,7 @@ getHomeUserAbe()
 {
 
   static char path[PATH_SIZE];
-#ifndef WIN32
+#if !defined(WIN32) && !defined(__OS2__) && !defined(__EMX__)
   struct passwd *pwent;
 
   pwent = getpwuid(getuid());
@@ -18,7 +20,7 @@ getHomeUserAbe()
 
   sprintf(path, "%s%s", pwent->pw_dir, PATH_SEP ".abe" PATH_SEP);
 #else
-  sprintf(path, xstr(BASE_DIR) PATH_SEP);
+  sprintf(path, xstr(BASE_DIR) PATH_SEP "savegame" PATH_SEP);
 #endif
 
   return path;
@@ -30,11 +32,12 @@ getHomeUserAbe()
 void
 mkshuae()
 {
-#ifndef WIN32
+#if !defined(WIN32)
   char *hua = getHomeUserAbe();
 
   if(mkdir(hua, (mode_t) S_IFDIR | S_IRWXU)) {
-    perror(hua);
+    if(errno != EEXIST)
+      perror(hua);
   }
 #endif
 }

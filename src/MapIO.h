@@ -2,8 +2,8 @@
 #define MAPIO_H
 
 #include "Main.h"
-#include "SDL_rwops.h"
-#include "SDL_endian.h"
+#include <SDL2/SDL_rwops.h>
+#include <SDL2/SDL_endian.h>
 
 #include "Directories.h"
 

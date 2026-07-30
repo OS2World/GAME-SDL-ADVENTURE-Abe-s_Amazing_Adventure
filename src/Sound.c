@@ -55,7 +55,6 @@ loadSound(int index, char *name)
   if(!sound[index]) {
     printf("Mix_LoadWAV: name=%s path=%s error=%s\n", name, path,
            Mix_GetError());
-    SDL_Quit();
   }
 }
 
@@ -74,7 +73,9 @@ initAudio()
 
   if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
     printf("Mix_OpenAudio: %s\n", Mix_GetError());
-    exit(2);
+    sound_enabled = 0;
+    music_enabled = 0;
+    return;
   }
 
   intro_music = game_music = NULL;

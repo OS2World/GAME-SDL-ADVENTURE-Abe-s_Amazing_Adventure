@@ -1,11 +1,13 @@
 #ifndef DIRECTORIES_H
 #define DIRECTORIES_H
 
-#ifndef WIN32
+#if !defined(WIN32)
+#include <sys/stat.h>
+#endif
+#if !defined(WIN32) && !defined(__OS2__) && !defined(__EMX__)
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #endif
 
@@ -19,7 +21,8 @@
 #define PATH_SIZE 1024
 #endif
 
-#ifdef WIN32
+#undef PATH_SEP
+#if defined(WIN32) || defined(__OS2__) || defined(__EMX__)
 #define PATH_SEP "\\"
 #else
 #define PATH_SEP "/"
@@ -36,10 +39,10 @@
 
 char *getHomeUserAbe();
 
-#ifndef WIN32
-#define getSaveGameDir() getHomeUserAbe()
-#else
+#if defined(WIN32) || defined(__OS2__) || defined(__EMX__)
 #define getSaveGameDir() xstr(BASE_DIR) PATH_SEP "savegame" PATH_SEP
+#else
+#define getSaveGameDir() getHomeUserAbe()
 #endif
 
 void mkshuae();

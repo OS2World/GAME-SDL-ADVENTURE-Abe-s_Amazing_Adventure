@@ -1,0 +1,27 @@
+# Makefile.os2 -- Abe's Amazing Adventure for ArcaOS (GCC 9.2 / kLIBC)
+CC      = gcc
+CFLAGS  = -O2 -Zomf -Zmt -Wall -I. -IC:/usr/include -DBASE_DIR=.
+LDFLAGS = -Zomf -Zmt -Zstack 512
+LIBS    = C:/usr/lib/SDL2_dll.a C:/usr/lib/SDL2_mixer_dll.a -lm
+
+TARGET  = ../abe.exe
+DEFFILE = abe.def
+
+SRCS = Main.c Map.c MapIO.c Image.c Monster.c Sound.c Font.c \
+       Util.c Directories.c Game.c Editor.c Icons.c Menu.c Splash.c
+
+OBJS = $(SRCS:.c=.obj)
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS) $(DEFFILE)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(DEFFILE) $(LIBS)
+
+%.obj: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	-del *.obj
+	-del ..\abe.exe
+
+.PHONY: all clean

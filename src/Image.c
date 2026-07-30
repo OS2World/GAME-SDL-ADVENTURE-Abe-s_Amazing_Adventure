@@ -41,7 +41,7 @@ doLoadImage(char *filename, char *name)
     return;
   }
   // set black as the transparent color key
-  SDL_SetColorKey(image, SDL_SRCCOLORKEY,
+  SDL_SetColorKey(image, SDL_TRUE,
                   SDL_MapRGBA(image->format, 0x00, 0x00, 0x00,
                               SDL_ALPHA_OPAQUE));
 
@@ -239,6 +239,8 @@ doLoadImage(char *filename, char *name)
     }
     images[image_count]->monster_index = monster;
 
+    fprintf(stderr, "\t  -> images[%d] = %s\n", image_count, name);
+    fflush(stderr);
     showLoadingProgress();
     image_count++;
   }
@@ -373,23 +375,35 @@ loadImagesFromTar()
         fprintf(stderr, "Found: >%s< size=>%ld< blocks=>%d<\n", name,
                 filesize, blocks_read);
         fflush(stderr);
-        mode = 1;
 
-        // open a temp file to extract this image to
-        if(!(tmp = fopen(tmp_path, "wb"))) {
-          fprintf(stderr, "Cannot open temp file for writing: %s\n",
-                  tmp_path);
-          fflush(stderr);
-          exit(0);
+        if(blocks_read == 0) {
+          /* Zero-byte / directory entry — no data blocks follow; stay in
+             header mode so the next block is parsed as a header. */
+          mode = 0;
+        } else {
+          mode = 1;
+          // open a temp file to extract this image to
+          if(!(tmp = fopen(tmp_path, "wb"))) {
+            fprintf(stderr, "Cannot open temp file for writing: %s\n",
+                    tmp_path);
+            fflush(stderr);
+            exit(0);
+          }
         }
       }
     } else {
       blocks_read--;
 
       // write to temp file
-      fwrite(buff,
-             (!blocks_read ? filesize % TAR_BLOCK_SIZE : TAR_BLOCK_SIZE), 1,
-             tmp);
+      /* When filesize is an exact multiple of TAR_BLOCK_SIZE, the last
+         block still has TAR_BLOCK_SIZE useful bytes, not 0. */
+      {
+        long last_bytes = filesize % TAR_BLOCK_SIZE;
+        if(last_bytes == 0) last_bytes = TAR_BLOCK_SIZE;
+        fwrite(buff,
+               (!blocks_read ? (size_t)last_bytes : TAR_BLOCK_SIZE), 1,
+               tmp);
+      }
 
       if(!blocks_read) {
         mode = 0;
@@ -413,10 +427,10 @@ setAlphaBlends()
   int i;
   for(i = 0; i < alphacount; i++) {
     if(mainstruct.alphaBlend) {
-      SDL_SetAlpha(images[alphas[i]]->image, SDL_RLEACCEL | SDL_SRCALPHA,
-                   128);
+      SDL_SetSurfaceAlphaMod(images[alphas[i]]->image, 128);
+      SDL_SetSurfaceBlendMode(images[alphas[i]]->image, SDL_BLENDMODE_BLEND);
     } else {
-      SDL_SetAlpha(images[alphas[i]]->image, 0, 0);
+      SDL_SetSurfaceBlendMode(images[alphas[i]]->image, SDL_BLENDMODE_NONE);
     }
   }
 }

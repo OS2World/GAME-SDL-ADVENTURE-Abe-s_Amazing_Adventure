@@ -4,9 +4,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "SDL.h"
-#include "SDL_thread.h"
-#include "SDL_mixer.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
+#include <SDL2/SDL_mixer.h>
 
 #include "Common.h"
 #include "Image.h"
@@ -28,6 +28,7 @@
 extern int runmode;
 
 extern SDL_Surface *screen;
+extern SDL_Window *window;
 extern int state;
 
 typedef struct _main {
@@ -41,5 +42,6 @@ extern Main mainstruct;
 void startEditor();
 void startGame();
 void showLoadingProgress();
+void presentScreen(void);
 
 #endif

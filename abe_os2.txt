@@ -1,0 +1,155 @@
+Abe's Amazing Adventure - ArcaOS / OS/2 Port Notes
+====================================================
+
+This document covers building and running Abe's Amazing Adventure on ArcaOS
+(and compatible OS/2 environments) using SDL2 and GCC 9.2 / kLIBC.
+
+The original game was written for Linux/SDL1. This port migrates the rendering
+and audio layers to SDL2 and adds the OS/2-specific build support needed to
+produce a native PM executable.
+
+
+Requirements
+------------
+- ArcaOS 5.x (tested on ArcaOS 5.1 / OS2 eCS 2.45)
+- GCC 9.2 with kLIBC (available via the ArcaOS package manager / RPM)
+- SDL2 (SDL2_dll.a + headers under C:/usr/include/SDL2)
+- SDL2_mixer (SDL2_mixer_dll.a + headers)
+- WLINK (Open Watcom linker, used via EMXOMFLD)
+- GNU make
+- REXX (standard OS/2 component)
+
+
+Directory layout
+----------------
+abe.exe              Compiled binary
+abe_os2.txt          This file
+README.md            General readme
+compile-abe.cmd      REXX build script
+run-abe.cmd          REXX launch script
+src/                 C source files
+src/Makefile.os2     OS/2-specific makefile
+images/images.tar    Game graphics (TAR archive)
+sounds/              Sound effects (WAV) and music (OGG)
+maps/                Map data files
+savegame/            Used at runtime for temp BMP extraction
+
+
+Building
+--------
+Open an OS/2 command prompt (CMD.EXE) in the Abe directory and run:
+
+  compile-abe.cmd
+
+This sets the required environment variables, enters the src/ directory, runs
+make with Makefile.os2, and writes the build log to compile-abe.log.
+
+The environment variables set by the script are:
+  EMXOMFLD_TYPE=WLINK
+  EMXOMFLD_LINKER=wl.exe
+  EMXOMFLD_PRELINK=0
+
+These are required so that the GCC driver calls WLINK (Open Watcom) rather
+than EMXOMFLD for linking, producing a proper OS/2 LX executable.
+
+Compiler flags used:
+  -O2 -Zomf -Zmt -Wall
+  -DBASE_DIR=.
+  -Zstack 512  (linker)
+
+The linker also requires abe.def (a module definition file included in src/).
+
+
+Running
+-------
+From the Abe directory:
+
+  run-abe.cmd
+
+This changes to the Abe directory, launches abe.exe in windowed mode, and
+captures stderr to run-abe.log for diagnostics.
+
+You can also run directly:
+
+  abe.exe --window
+
+or in fullscreen (if your display driver supports it):
+
+  abe.exe
+
+
+Controls
+--------
+Arrow keys   Move / climb
+Space        Jump
+Enter        Use a balloon
+Esc          Quit
+
+
+Port changes from the original SDL1 source
+------------------------------------------
+The following changes were made to port from SDL1 to SDL2 on OS/2:
+
+1. SDL2 rendering model
+   The game uses a virtual SDL_Surface (screen) as an off-screen render
+   target. Each frame, presentScreen() letterbox-scales it onto the real
+   SDL_Window surface and calls SDL_UpdateWindowSurface(). No SDL_Renderer
+   or GPU textures are used; all drawing remains software-surface based.
+
+2. SDL2 API replacements
+   - SDL_SetVideoMode      -> SDL_CreateWindow / SDL_GetWindowSurface
+   - SDL_Flip              -> SDL_UpdateWindowSurface
+   - SDL_SetAlpha          -> SDL_SetSurfaceAlphaMod / SDL_SetSurfaceBlendMode
+   - SDL_SetColorKey       -> SDL_SetColorKey (SDL2 signature differs)
+   - SDL_mixer init        -> Mix_OpenAudio with SDL2 parameters
+   - SDL_RWFromFP          -> SDL_RWFromFP (still available in SDL2)
+
+3. OS/2 path separator
+   Directories.h defines PATH_SEP as "\\" for OS/2 (__OS2__ / __EMX__).
+   An #undef PATH_SEP guard prevents redefinition warnings when Common.h
+   is included after Directories.h.
+
+4. Save-game directory (mkshuae)
+   On Linux, the game stores saves in ~/.abe/. On OS/2 it uses .\savegame\.
+   The mkshuae() function was gated to skip OS/2; the guard was removed so
+   the directory is created at startup using kLIBC's two-argument mkdir().
+   This directory is also used as the temporary extraction path for BMP
+   files read from images.tar.
+
+5. TAR image loader fix
+   The custom TAR parser in Image.c had a bug: when a TAR entry had
+   filesize == 0 (directory entries, etc.), blocks_read was 0 but the
+   parser still entered data-reading mode, consuming all subsequent real
+   file data as if it were padding. Fixed by skipping data mode entirely
+   when blocks_read == 0.
+
+6. Map tile bounds checking
+   The map files reference tile image indices beyond the loaded images[]
+   array (which holds 256 entries). Added a sanitization pass in
+   loadMapPath() that replaces any out-of-bounds or unloaded tile index
+   with EMPTY_MAP after decompression. Also added bounds guards in
+   decompressMap() and compressMap() for safety.
+
+7. Build system
+   src/Makefile.os2 added for GCC/kLIBC. Produces .obj (OMF) objects and
+   links with WLINK via the EMXOMFLD wrapper. compile-abe.cmd and
+   run-abe.cmd are REXX scripts with CRLF line endings (required by OS/2
+   REXX) that automate the build and launch.
+
+
+Known issues / limitations
+--------------------------
+- Some map tiles reference image indices beyond those present in the
+  bundled images.tar. These tiles render as empty space. This is a data
+  issue in the original map files, not a runtime error.
+- Fullscreen mode depends on your display driver. --window is recommended.
+- Music playback (OGG via SDL2_mixer) requires the SDL2_mixer DLL to be
+  on the LIBPATH. If music does not play, verify SDL2_MIXER.DLL is
+  accessible.
+- The built-in map editor (GOD_MODE) has not been tested on OS/2.
+
+
+Contact
+-------
+Original game: Gabor Torok <cctorok@yahoo.com>  http://abe.sf.net
+ArcaOS port:   Martin Iturbide

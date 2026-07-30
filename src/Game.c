@@ -411,7 +411,7 @@ gameMainLoop(SDL_Event * event)
     // Pedro: ALT+TAB minimize.
     case SDLK_TAB:
       if((KMOD_LALT==event->key.keysym.mod)||(KMOD_RALT==event->key.keysym.mod)) {
-        SDL_WM_IconifyWindow();
+        SDL_MinimizeWindow(window);
       }
     break;
     default:
@@ -557,7 +557,7 @@ gameCheckPosition()
         removeAllLiveMonsters();
         saveGame();
         drawString(screen, 150, 220, "game saved!");
-        SDL_Flip(screen);
+        presentScreen();
         SDL_Delay(3000);
         map.redraw = 1;
       }

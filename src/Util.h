@@ -2,8 +2,8 @@
 #define UTIL_H
 
 #include "Main.h"
-#include "SDL_rwops.h"
-#include "SDL_endian.h"
+#include <SDL2/SDL_rwops.h>
+#include <SDL2/SDL_endian.h>
 
 // Rectangle math functions
 int contains(SDL_Rect * a, int x, int y);
