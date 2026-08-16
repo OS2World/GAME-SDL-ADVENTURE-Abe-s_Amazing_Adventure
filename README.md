@@ -4,6 +4,8 @@ A scrolling, platform-jumping, key-collecting, ancient pyramid exploring game,
 vaguely in the style of similar games for the Commodore+4. Originally written
 by Gabor Torok as a birthday gift for his son.
 
+![Abe ScreenShot](/doc/Abe.png)
+
 ## Requirements
 
 - SDL 2.x (see `abe_os2.txt` for the ArcaOS/OS2 port)
